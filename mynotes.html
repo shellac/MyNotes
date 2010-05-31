@@ -37,7 +37,7 @@ function scanForWikiLink(textarea) {
 function save() {
 	var currentName = $('#name').text();
 	set(currentName , $('#content').val());
-	console.log('Save: ' + currentName);
+	//console.log('Save: ' + currentName);
 	refreshList();
 }
 
@@ -47,7 +47,7 @@ function saveAndGoTo(link) {
 }
 
 function goTo(link) {
-	console.log('Go to: ' + link);
+	//console.log('Go to: ' + link);
 	var newName = link.substring(1);
 	$('#name').text(newName);
 	var newContent = '**Welcome to ' + newName + '**\n\n*Begin your new page*';
