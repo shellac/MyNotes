@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style type="text/css" media="screen">
+			#note-area { 
+				border: solid grey 1pt; 
+				background: #eeeeee; padding: 1em; 
+			}
+			#page-list {
+				float: right; 
+				border: solid grey 1pt; 
+				background: #eeeeee; 
+			}
+			#page-list ul {
+				list-style: none;
+				padding: 1em;
+			}
+			#page-list li {
+				padding: 2pt; 
+			}
+		</style>
+		<script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+		<script type="text/javascript" src="js/jquery.a-tools-1.4.1.min.js"></script>
+		<script type="text/javascript">
+function scanForWikiLink(textarea) {
+	var pos = textarea.getSelection().end;	
+	var matchLink = /\b[A-Z]\w*[A-Z]\w+$/; // detect wikilink	
+	var res = matchLink.exec(textarea.val().substring(0, pos));
+	
+	if (res) {
+		var link = res[0];
+		textarea.setSelection(pos - link.length, pos);
+		textarea.replaceSelection('[' + link + '](#' + link + ')');
+	}
+}
+
+function save() {
+	var currentName = $('#name').text();
+	set(currentName , $('#content').val());
+	console.log('Save: ' + currentName);
+	refreshList();
+}
+
+function saveAndGoTo(link) {
+	save();
+	goTo(link);
+}
+
+function goTo(link) {
+	console.log('Go to: ' + link);
+	var newName = link.substring(1);
+	$('#name').text(newName);
+	var newContent = '**Welcome to ' + newName + '**\n\n*Begin your new page*';
+	if (get(newName)) newContent = get(newName);
+	setContent($('#content'), newContent);
+}
+
+function get(name) { return localStorage.getItem('mynotes.' + name); }
+
+function set(name, value) { localStorage.setItem('mynotes.' + name, value); }
+
+function getPages() {
+	var page;
+	var pages = [];
+	for (page in localStorage) {
+		if (page.match(/^mynotes\./)) {
+			pages.push(page.substring(8));
+		}
+	}
+	return pages;
+}
+
+function refreshList() {
+	var pages = getPages();
+	var listHolder = $('#page-list');
+	listHolder.find('li').remove();
+	var list = listHolder.find('ul');
+	for (pageIndex in pages) {
+		var page = pages[pageIndex];
+		list.append('<li><a href="#' + page + '">' + page + '</a></li>');
+	}
+}
+
+function setContent(textarea, content) {
+	textarea.val(content);
+	textarea.trigger('click');
+	textarea.setCaretPos(-1); // Kick wmd to redisplay
+	textarea.focus();
+}
+
+$().ready( function() {
+	$('#content').keydown( function(event) {
+		if (event.keyCode == 32 || 
+			event.keyCode == 13) scanForWikiLink($(this));
+	});
+	
+	// Workaround for parsing issue in md lib
+	$('a[href^=#]').live('click', function() {
+		saveAndGoTo($(this).attr('href')); 
+		refreshList();
+	} );
+	
+	setInterval('save()', 3000);
+	
+	if (document.location.hash) goTo(document.location.hash);
+	else goTo('#Home');
+	refreshList();
+} );
+		</script>
+	</head>
+	<body>
+		<h1>MyNotes</h1>
+		<div id="page-list"><ul></ul></div>
+		<form>
+			<div id="note-area">
+			<h2><span id="name">Home</span></h2>
+			<div class="wmd-preview"></div>
+			</div>
+			<p><textarea id="content" rows="7" cols="80"></textarea></p>
+		</form>
+		<script type="text/javascript" src="js/wmd.js""></script>
+	</body>
+</html>
